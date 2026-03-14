@@ -22,10 +22,11 @@ class self_function:
             fun.LidarCalibFun(20, d_err = 0.5, d_err_cnt = 5, angle_err = 0.5, angle_err_cnt = 5, left_right_e = 1)
             fun.USCalibFun(dis, angle_e = 1, dis_e = 0.5, left_right_e = 2, CNT = 5)
 
-    def GETrealXYZthroughcamfaceonground(self, CAMXYZ, objectXY, framesize):
+    def GETrealXYZthroughcamfaceonground(self, CAMXYZ, objectXY, framesize, camangle):
+        #Common situation: framesize = (640, 480), camangle = (66, 53)
         #XYZ origin is the centre of the robot
-        wideangle = 66
-        verticalangle = 53
+        wideangle = camangle[0]
+        verticalangle = camangle[1]
 
         camx = CAMXYZ[0]
         camy = CAMXYZ[1]
@@ -144,12 +145,10 @@ class self_function:
         return([nx, ny, nw])    
 
     def GETLidarDataAL(self):
-        time.sleep(1)
         fun.StartTestIO()
         LAD = fun.ShareLib.LidarAngleData.read()
         LRD = fun.ShareLib.LidarRangeData.read()
         fun.BreakTestIO()
-        time.sleep(1)
 
         LD = []
 
@@ -160,6 +159,8 @@ class self_function:
 
             LAD[i] = round(LAD[i] * 180 / math.pi, 1)
             LRD[i] = round(LRD[i] * 100, 1)
+
+            print(LAD[i], LRD[i])
 
             if abs(LAD[i]) > 180: LAD[i] = 0.0
             elif abs(LRD[i]) > 9999999: LRD[i] = 0.0 
@@ -176,9 +177,11 @@ class self_function:
     
     def TURNandGETLidarDataXY(self, TA, LXY, disLO):
         #turn left: TA < 0, turn right: TA > 0
-        self.RelativeXYW([0, 0, TA], 15, 5, 1)
-        dataA = self.GETLidarDataAL()
-        self.RelativeXYW([0, 0, -TA], 15, 5, 1)
+        if TA == 0: dataA = self.GETLidarDataAL()
+        else:
+            self.RelativeXYW([0, 0, TA], 15, 5, 1)
+            dataA = self.GETLidarDataAL()
+            self.RelativeXYW([0, 0, -TA], 15, 5, 1)
 
         dataXY = []
         for i in dataA:

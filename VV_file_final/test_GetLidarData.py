@@ -9,6 +9,6 @@ fun = Func(shareLib)
 f = self_function()
 
 if __name__ == "__main__":
-    RD = f.TURNandGETLidarDataXY(45, (40, 0), 20)
+    RD = f.GETLidarDataAL()
     #RD = f.GETLidarDataAL()
     for i in RD: print(i)

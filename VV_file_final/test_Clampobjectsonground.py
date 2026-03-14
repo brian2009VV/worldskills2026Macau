@@ -66,7 +66,7 @@ if __name__ == "__main__":
     CAMXYZ = (0, 32, 50)
     objectX = (model_result[1][0] + model_result[1][2]) // 2
     objectY = (model_result[1][1] + model_result[1][3]) // 2
-    ox, oy, oz = f.GETrealXYZthroughcamfaceonground(CAMXYZ, (objectX, objectY), (640, 480))
+    ox, oy, oz = f.GETrealXYZthroughcamfaceonground(CAMXYZ, (objectX, objectY), (640, 480), (66, 53))
     print(ox, oy, oz)
     
     #ClampObject
