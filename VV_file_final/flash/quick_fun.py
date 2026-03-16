@@ -21,6 +21,40 @@ class quick_function:
         else:
             fun.LidarCalibFun(20, d_err = 0.5, d_err_cnt = 5, angle_err = 0.5, angle_err_cnt = 5, left_right_e = 1)
             fun.USCalibFun(dis, angle_e = 1, dis_e = 0.5, left_right_e = 2, CNT = 5)
+    
+    def MoveARM(self, NeedtoReset, speedTurn, speedLeft, armHigh, turnAngle, rotateAngle, clampVal, raiseAngle, telescopicVal):
+        Max_arm_high = 86.5
+
+        Reset_ARM_LEFT = [
+        (fun.ResetLiftFun, (speedLeft,)), 
+        (fun.LiftCtrlFun, (-2,)),      
+        ]
+        Reset_TurnandLeft = [
+        (fun.run_in_order, (Reset_ARM_LEFT,)),   
+        (fun.ResetTurnFun, (speedTurn,)),
+        ]
+
+        if abs(turnAngle) <= 5 and NeedtoReset:
+            Gototarget = [
+            (fun.LiftCtrlFun, (-(Max_arm_high - armHigh), 10, 3,),),
+            (fun.RaiseServoCtrl, (raiseAngle, 5,)),    
+            (fun.RotatingServoCtrl, (rotateAngle, 5,)),
+            (fun.ClampServoCtrl, (clampVal, 5,)),
+            (fun.TelescopicServoCtrl, (telescopicVal, 5,)),
+            ]
+        else:
+            Gototarget = [
+            (fun.LiftCtrlFun, (-(Max_arm_high - armHigh), 10, 3,),),
+            (fun.TurnCtrlFun, (turnAngle, 10, 3,),),
+            (fun.RaiseServoCtrl, (raiseAngle, 5,)),    
+            (fun.RotatingServoCtrl, (rotateAngle, 5,)),
+            (fun.ClampServoCtrl, (clampVal, 5,)),
+            (fun.TelescopicServoCtrl, (telescopicVal, 5,)),
+            ]
+
+        if NeedtoReset: results1 = fun.run_in_threads(Reset_TurnandLeft)
+        results2 = fun.run_in_threads(Gototarget)
+        return True
         
     def RelativeXYW(self, dp, v, p_e, a_e):
         dx = dp[0]

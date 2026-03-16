@@ -14,4 +14,5 @@ if __name__ == "__main__":
     #fun.RotatingServoCtrl(val = -30, cnt = 5)
     #fun.ClampServoCtrl(val = 5, cnt = 5)
     #fun.RaiseServoCtrl(val = 45, cnt = 1)
-    fun.TelescopicServoCtrl(val = 9, cnt = 5)
+    #fun.TelescopicServoCtrl(val = 9, cnt = 5)
+    f.RelativeXYW([50, 0, 0], 40, 5, 1.5)
