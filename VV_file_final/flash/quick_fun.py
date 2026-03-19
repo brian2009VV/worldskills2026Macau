@@ -55,7 +55,86 @@ class quick_function:
         if NeedtoReset: results1 = fun.run_in_threads(Reset_TurnandLeft)
         results2 = fun.run_in_threads(Gototarget)
         return True
+    
+    def GETrealXYZ(self, CAMXYZ, OXY, gamma, sita):
+        #cam turn left: gamma < 0
+        #cam turn right: gamma > 0
+        framesize = (640, 480)
+        camangle = (66, 53)
+        alpha = camangle[0] / 2 / 180 * math.pi
+        beta = camangle[1] / 2  / 180 * math.pi
+        sita = sita / 180 * math.pi
+
+        z = CAMXYZ[2]
+
+        l = z / math.cos(sita)
+        lpi = z / math.cos(sita - beta) * math.cos(beta)
+        print(l, lpi)
+
+        w = lpi * math.tan(alpha)
+        h = lpi * math.tan(beta)
+
+        Rx = w * (OXY[0] - framesize[0] / 2) / (framesize[0] / 2)
+        Ry = h * (framesize[1] / 2 - OXY[1]) / (framesize[1] / 2)
+        print(OXY[0], OXY[1], w, h, Rx, Ry)
+
+        deta = math.atan((l - lpi) / h)
+        print(deta * 180 / math.pi)
         
+        ypi = (Ry + h) * math.cos(deta) + z * math.tan(sita - beta)
+        xpi = Rx
+        k = (Ry + h) * math.sin(deta)
+        print(k)
+
+        x = xpi * z / (z - k)
+        y = ypi * z / (z - k)
+
+        print(x, y, z)
+        return(x, y, z)
+        '''
+        print(l, lpi)
+        w = l * math.tan(alpha / 180 * math.pi)
+        wpi = lpi * math.tan(alpha / 180 * math.pi)
+
+        hpi = lpi * math.tan(beta / 180 * math.pi)
+        h = (hpi ** 2 + (lpi - l) ** 2) ** 0.5
+
+        print(h)
+
+        y = (framesize[1] - OXY[1]) / (framesize[1] / 2) * h
+
+        print(y)
+        k = h * wpi / (w - wpi)
+
+        wpipi = (k + y) / k * wpi
+
+        x = (OXY[0] - framesize[0] / 2) / (framesize[0] / 2) * wpipi
+        y += z * math.tan((sita - beta) / 180 * math.pi)
+        '''
+        print(x, y, z)
+        r = (x ** 2 + y ** 2) ** 0.5
+        
+        if x == 0: threta = math.pi / 2
+        else: threta = math.atan(y / x)
+        
+        print(threta * 180 / math.pi)
+
+        if threta < 0: threta = math.pi + threta
+
+        threta = threta - gamma * math.pi / 180
+
+        x = r * math.cos(threta)
+        y = r * math.sin(threta)
+
+        x += CAMXYZ[0]
+        y += CAMXYZ[1]
+        
+        x = round(x, 1)
+        y = round(y, 1)
+        z = round(z, 1)
+
+        
+
     def RelativeXYW(self, dp, v, p_e, a_e):
         dx = dp[0]
         dy = dp[1]

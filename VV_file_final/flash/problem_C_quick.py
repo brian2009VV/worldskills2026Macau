@@ -1,6 +1,8 @@
 import time
 import sys
 import os
+import cv2
+from ultralytics import YOLO
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 from Func import *
@@ -8,7 +10,9 @@ from task.VV_file_final.flash.quick_fun import quick_function
 shareLib = LoadShareLib()
 fun = Func(shareLib)
 f = quick_function()
+model_path = '/home/pi/PickPro/python/task/VV_file_final/model/best.pt'
 
+CAMXYZ = [0, 35, 43]
 M = []
 v_f = 50
 v_h = 40
@@ -214,46 +218,33 @@ def go_through_hole(L, R, x):
         f.RelativeXYW([90, 0, 0], v_f, 5, 1.5)
 
     return m_point
+
+def get_model_object_realxyz(correct_pre, CAMXYZ, gamma, sita):
+    model = YOLO(model_path)
     
+    R = []
+    camera = cv2.VideoCapture(0)
+    success, frame = camera.read()
+    boxes = model(frame)[0].boxes
+
+    for cls, conf, xyxy in zip(boxes.cls, boxes.conf, boxes.xyxy):
+        if float(conf) >= correct_pre:
+            x1, y1, x2, y2 = map(int, xyxy)
+            OXY = (x1 / 2 + x2 / 2, y1 / 2 + y2 / 2)
+            ROXYZ = f.GETrealXYZ(CAMXYZ, OXY, gamma, sita)
+            R.append((int(cls), round(float(conf), 1), ROXYZ))
+            cv2.putText(frame, str(int(cls)) + " " + str(ROXYZ[0]) + " " + str(ROXYZ[1]) + " " + str(ROXYZ[2]), [x1 + 5, y1 + 20], cv2.FONT_HERSHEY_DUPLEX, 0.8, (0, 255, 0), 2, 0)
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+    
+    cv2.imwrite('/home/pi/PickPro/python/task/VV_file_final/cap_photo/' + 'ans' + '.jpg', frame)
+    camera.release()
+
+    return R
+
 if __name__ == "__main__":
-    f.RelativeXYW([0, 0, -180], v_h, 5, 1.5)
-    f.CalibrateFRONT(20)
-    f.RelativeXYW([0, 0, -90], v_h, 5, 1.5)
-    f.CalibrateFRONT(20)
+    #middle
+    #f.MoveARM(True, 8, 20, 60, -185, -45, 12, 50, 9)
+    R = get_model_object_realxyz(0.8, CAMXYZ, 45, 50)
+    print(R)
 
-    f.RelativeXYW([0, 0, -90], v_h, 5, 1.5)
-    write_Wall(0, 160, 3)
-    f.RelativeXYW([0, 0, -90], v_h, 5, 1.5)
-    #f.CalibrateFRONT(wall_len // 2 - disLO)
-    f.RelativeXYW([60, 0, 0], v_h, 2, 1.5)
-    f.RelativeXYW([0, 0, 90], v_h, 5, 1.5)
-    write_Wall(0, 100, 7)
-    L, R = check_hole(0)
-    x = go_through_hole(L, R, 100)
-    
-    
-    for i in range(3):
-        if x != 100: write_Wall(i + 1, x, 3)
-
-        if x == 100:
-            pass
-        elif x > 100:
-            f.RelativeXYW([0, 0, -90], v_h, 5, 1.5)
-            f.RelativeXYW([x - 100 + 5, 0, 0], v_h, 2, 1.5)
-            f.RelativeXYW([0, 0, 90], v_h, 5, 1.5)
-        else:
-            f.RelativeXYW([0, 0, 90], v_h, 5, 1.5)
-            f.RelativeXYW([100 - x + 5, 0, 0], v_h, 2, 1.5)
-            f.RelativeXYW([0, 0, -90], v_h, 5, 1.5)
-
-        write_Wall(i + 1, 100, 7)
-        L, R = check_hole(i + 1)
-        x = go_through_hole(L, R, 100)
-    
-        print(M)
-        print(Wall)
-
-    
-    write_Wall(0, 100, 10)
-    print(check_hole(0))
     
