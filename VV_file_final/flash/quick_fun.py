@@ -56,6 +56,35 @@ class quick_function:
         results2 = fun.run_in_threads(Gototarget)
         return True
     
+    def MoveARMXYZAC(self, ResetTF, Resetspeed, XYZ, A, C):
+        #XYZ origin is the centre of the robot
+        disOT = 10
+        disTele = 16
+        disClamp = 18
+        disCL = 6.5
+
+        ypi = disClamp * math.cos(A * math.pi / 180)
+        zpi = disClamp * math.sin(A * math.pi / 180)
+
+        x = XYZ[0]
+        y = XYZ[1] - disOT - ypi
+        z = XYZ[2] + zpi + disCL
+        
+        if y == 0: alpha = math.pi / 2
+        else: alpha = math.atan(x / y)
+
+        Turnangle = (-math.pi + alpha) * 180 / math.pi
+
+        Rotateangle = alpha * 180 / math.pi
+
+        l = (x ** 2 + y ** 2) ** 0.5 - disTele
+
+        l = min(l, 9)
+        l = max(-2, l)
+        
+        self.MoveARM(ResetTF, Resetspeed[0], Resetspeed[1], z, Turnangle, Rotateangle, C, 90 - A, l)
+        return True
+
     def GETrealXYZ(self, CAMXYZ, OXY, gamma, sita):
         #cam turn left: gamma < 0
         #cam turn right: gamma > 0
@@ -90,28 +119,7 @@ class quick_function:
         y = ypi * z / (z - k)
 
         print(x, y, z)
-        return(x, y, z)
-        '''
-        print(l, lpi)
-        w = l * math.tan(alpha / 180 * math.pi)
-        wpi = lpi * math.tan(alpha / 180 * math.pi)
-
-        hpi = lpi * math.tan(beta / 180 * math.pi)
-        h = (hpi ** 2 + (lpi - l) ** 2) ** 0.5
-
-        print(h)
-
-        y = (framesize[1] - OXY[1]) / (framesize[1] / 2) * h
-
-        print(y)
-        k = h * wpi / (w - wpi)
-
-        wpipi = (k + y) / k * wpi
-
-        x = (OXY[0] - framesize[0] / 2) / (framesize[0] / 2) * wpipi
-        y += z * math.tan((sita - beta) / 180 * math.pi)
-        '''
-        print(x, y, z)
+        
         r = (x ** 2 + y ** 2) ** 0.5
         
         if x == 0: threta = math.pi / 2
@@ -119,9 +127,11 @@ class quick_function:
         
         print(threta * 180 / math.pi)
 
-        if threta < 0: threta = math.pi + threta
+        if x < 0 and y > 0: threta = math.pi + threta
+        elif x < 0 and y < 0: threta = math.pi + threta
+        elif x > 0 and y < 0: threta = 2 * math.pi + threta
 
-        threta = threta - gamma * math.pi / 180
+        threta = (threta - gamma * math.pi / 180) % (2 * math.pi)
 
         x = r * math.cos(threta)
         y = r * math.sin(threta)
@@ -131,8 +141,8 @@ class quick_function:
         
         x = round(x, 1)
         y = round(y, 1)
-        z = round(z, 1)
 
+        return (x, y, 0)
         
 
     def RelativeXYW(self, dp, v, p_e, a_e):
@@ -145,19 +155,17 @@ class quick_function:
         op = fun.ReadCurPose()
 
         if dx == 0:
-            t = math.pi / 2
+            if dy >= 0: t = math.pi / 2
+            else: t = -math.pi / 2
         else:
-            t = math.atan(dy / dx)
-
-        if dy > 0:
-            a = op.theta_ * math.pi / 180 + t
-        elif dy < 0:
-            a = op.theta_ * math.pi / 180 + t + math.pi
-        else:
-            if dx >= 0:
-                a = op.theta_ * math.pi / 180 + t
+            if dy >= 0:
+                if dx >= 0: t = math.atan(dy / dx)
+                else: t = math.pi + math.atan(dy / dx)
             else:
-                a = op.theta_ * math.pi / 180 + t + math.pi
+                if dx >= 0: t = math.atan(dy / dx)
+                else: t = -math.pi + math.atan(dy / dx)
+
+        a = op.theta_ * math.pi / 180 + t
 
         nx = int(op.x_ + d * math.cos(a))
         ny = int(op.y_ + d * math.sin(a))
@@ -165,8 +173,8 @@ class quick_function:
 
         nw = nw % 360
 
-        fun.TrackingPointFun(Pose(nx, ny, nw), v, p_e, a_e)
-        time.sleep(1)
+        if dx == 0 and dy == 0: fun.Rotate(dw)
+        else: fun.TrackingXYFun(Pose(nx, ny, nw), v, p_e, a_e)
 
         return([nx, ny, nw])    
 
