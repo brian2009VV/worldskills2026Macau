@@ -1,15 +1,23 @@
 import cv2
 import time
+import os
 
 if __name__ == "__main__":
-    camera = cv2.VideoCapture(0)
-    for i in range(10):
+    f = os.listdir('/home/pi/PickPro/python/task/VV_file_final/cap_photo')
+    num = 57
+    for i in f: num += 1
+    
+    i = 1
+    while True:
+        k = input()
+        camera = cv2.VideoCapture(0)
         success, frame = camera.read()
         if not success: break
-
-        cv2.imwrite('/home/pi/PickPro/python/task/VV_file_final/cap_photo/' +  str(i) + '.jpg', frame)
+    
+        cv2.imwrite('/home/pi/PickPro/python/task/VV_file_final/cap_photo/' +  str(num + i) + '.jpg', frame)
         print(frame.shape)
-
-        time.sleep(3)
+        
+        i += 1
+        camera.release()
 
         

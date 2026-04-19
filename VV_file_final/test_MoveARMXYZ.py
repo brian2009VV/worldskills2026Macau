@@ -8,4 +8,4 @@ fun = Func(shareLib)
 f = self_function()
 
 if __name__ == "__main__":
-    f.MoveARMXYZAC(True, (5, 10), (0, 35, 40), 90, 10)
+    f.MoveARM(False, 8, 20, 60, -185, -45, 12, 50, 9)

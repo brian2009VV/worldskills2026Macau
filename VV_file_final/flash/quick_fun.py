@@ -8,21 +8,21 @@ shareLib = LoadShareLib()
 fun = Func(shareLib)
 
 class quick_function:
-    def __init__(self):
+    def __init__(self) -> None:
         self.port_handler = None
         self.packet_handler = None
     
     def ZeroXYW(self):
         fun.ZeroOdom()
-    
-    def CalibrateFRONT(self, dis):
+
+    def CalibrateFRONT(self, dis: float) -> None:
         if dis >= 20:
-            fun.LidarCalibFun(dis, d_err = 0.5, d_err_cnt = 5, angle_err = 0.5, angle_err_cnt = 5, left_right_e = 1)
+            fun.LidarCalibFun(dis, d_err = 0.5, d_err_cnt = 5, angle_err = 0.25, angle_err_cnt = 5, left_right_e = 0.5)
         else:
-            fun.LidarCalibFun(20, d_err = 0.5, d_err_cnt = 5, angle_err = 0.5, angle_err_cnt = 5, left_right_e = 1)
+            fun.LidarCalibFun(20, d_err = 0.5, d_err_cnt = 5, angle_err = 0.25, angle_err_cnt = 5, left_right_e = 0.5)
             fun.USCalibFun(dis, angle_e = 1, dis_e = 0.5, left_right_e = 2, CNT = 5)
     
-    def MoveARM(self, NeedtoReset, speedTurn, speedLeft, armHigh, turnAngle, rotateAngle, clampVal, raiseAngle, telescopicVal):
+    def MoveARM(self, NeedtoReset: bool, speedTurn: float, speedLeft: float, armHigh: float, turnAngle: float, rotateAngle: float, clampVal: float, raiseAngle: float, telescopicVal: float) -> bool:
         Max_arm_high = 86.5
 
         Reset_ARM_LEFT = [
@@ -56,7 +56,7 @@ class quick_function:
         results2 = fun.run_in_threads(Gototarget)
         return True
     
-    def MoveARMXYZAC(self, ResetTF, Resetspeed, XYZ, A, C):
+    def MoveARMXYZAC(self, ResetTF: bool, Resetspeed: tuple, XYZ: tuple, A: float, C: float) -> bool:
         #XYZ origin is the centre of the robot
         disOT = 10
         disTele = 16
@@ -85,7 +85,7 @@ class quick_function:
         self.MoveARM(ResetTF, Resetspeed[0], Resetspeed[1], z, Turnangle, Rotateangle, C, 90 - A, l)
         return True
 
-    def GETrealXYZ(self, CAMXYZ, OXY, gamma, sita):
+    def GETrealXYZ(self, CAMXYZ: tuple, OXY: tuple, gamma: float, sita: float) -> tuple:
         #cam turn left: gamma < 0
         #cam turn right: gamma > 0
         framesize = (640, 480)
@@ -98,7 +98,6 @@ class quick_function:
 
         l = z / math.cos(sita)
         lpi = z / math.cos(sita - beta) * math.cos(beta)
-        print(l, lpi)
 
         w = lpi * math.tan(alpha)
         h = lpi * math.tan(beta)
@@ -108,24 +107,18 @@ class quick_function:
         print(OXY[0], OXY[1], w, h, Rx, Ry)
 
         deta = math.atan((l - lpi) / h)
-        print(deta * 180 / math.pi)
         
         ypi = (Ry + h) * math.cos(deta) + z * math.tan(sita - beta)
         xpi = Rx
         k = (Ry + h) * math.sin(deta)
-        print(k)
 
         x = xpi * z / (z - k)
         y = ypi * z / (z - k)
-
-        print(x, y, z)
         
         r = (x ** 2 + y ** 2) ** 0.5
         
         if x == 0: threta = math.pi / 2
         else: threta = math.atan(y / x)
-        
-        print(threta * 180 / math.pi)
 
         if x < 0 and y > 0: threta = math.pi + threta
         elif x < 0 and y < 0: threta = math.pi + threta
@@ -145,7 +138,7 @@ class quick_function:
         return (x, y, 0)
         
 
-    def RelativeXYW(self, dp, v, p_e, a_e):
+    def RelativeXYW(self, dp: list, v: float, p_e: float, a_e: float) -> list:
         dx = dp[0]
         dy = dp[1]
         dw = dp[2]
@@ -173,12 +166,12 @@ class quick_function:
 
         nw = nw % 360
 
-        if dx == 0 and dy == 0: fun.Rotate(dw)
+        if dx == 0 and dy == 0: fun.TrackingPointFun(Pose(nx, ny, nw), v, p_e, a_e)
         else: fun.TrackingXYFun(Pose(nx, ny, nw), v, p_e, a_e)
 
         return([nx, ny, nw])    
 
-    def GETLidarDataAL(self):
+    def GETLidarDataAL(self) -> list:
         fun.StartTestIO()
         LAD = fun.ShareLib.LidarAngleData.read()
         LRD = fun.ShareLib.LidarRangeData.read()
@@ -207,7 +200,7 @@ class quick_function:
         LD = sorted(LD, key = lambda x: x[0])
         return LD
     
-    def GETLidarDataXY(self, dataA, LXY, disLO):
+    def GETLidarDataXY(self, dataA: list, LXY: tuple, disLO: float) -> list:
         dataXY = []
         for i in dataA:
             l = i[1]
@@ -221,3 +214,20 @@ class quick_function:
             dataXY.append([x, y + disLO])
 
         return dataXY
+
+    def WAITPUSHStartLED(self) -> None:
+        fun.StartTestIO()
+        fun.TestStartLED(0)
+        fun.TestResetLED(0)
+        fun.TestStopLED(0)
+        fun.WaitStartButton()
+        fun.TestStartLED(1)
+        fun.BreakTestIO()
+
+    def OFFStartLED(self) -> None:
+        fun.StartTestIO()
+        fun.TestStartLED(0)
+        fun.TestResetLED(0)
+        fun.TestStopLED(0)
+        time.sleep(0.5)
+        fun.BreakTestIO()

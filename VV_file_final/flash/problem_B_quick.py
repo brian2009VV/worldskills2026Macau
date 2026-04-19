@@ -11,11 +11,11 @@ f = quick_function()
 
 M = []
 v_f = 50
-v_h = 40
+v_h = 50
 MIN_HOLE_L = 40
 deta_a = 12.5
 X_range = (10, 190)
-Y_range = (30, 70)
+Y_range = (30, 60)
 disLO = 20
 wall_len = 200
 Wall = [[-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
@@ -62,9 +62,11 @@ def write_Wall(n, x, times):
         Alist = []
         for i in data: Alist.append(i[0])
 
+        if len(Alist) == 0: continue
+        
         lpi = 1
         rpi = 1
-        ll = 1
+        ll = 0
         rr = 1
         MAX_L = 0
         for i in range(1, len(Alist)):
@@ -82,6 +84,7 @@ def write_Wall(n, x, times):
             lpi = ll
             rpi = rr
 
+        print(lpi, rpi)
         l_a = min(Alist[lpi], l_a)
         r_a = max(Alist[rpi], r_a)
 
@@ -199,19 +202,21 @@ def go_through_hole(L, R, x):
         return 100
     
     elif m_point < 95:
-        f.RelativeXYW([0, 0, -90], v_h, 5, 1.5)
+        f.RelativeXYW([0, -abs(x - m_point) - 5, 0], v_h, 2, 1.5)
+        #f.RelativeXYW([0, 0, -90], v_h, 5, 1.5)
         #f.CalibrateFRONT(m_point - disLO)
-        f.CalibrateFRONT(wall_len // 2 - disLO)
-        f.RelativeXYW([abs(x - m_point) + 5, 0, 0, 0], v_h, 2, 1.5)
-        f.RelativeXYW([0, 0, 90], v_h, 5, 1.5)
-        f.RelativeXYW([90, 0, 0], v_f, 5, 1.5)
+        #f.CalibrateFRONT(wall_len // 2 - disLO)
+        #f.RelativeXYW([abs(x - m_point) + 5, 0, 0, 0], v_h, 2, 1.5)
+        #f.RelativeXYW([0, 0, 90], v_h, 5, 1.5)
+        f.RelativeXYW([85, 0, 0], v_f, 2, 1.5)
     else:
-        f.RelativeXYW([0, 0, 90], v_h, 5, 1.5)
+        f.RelativeXYW([0, abs(x - m_point) + 5, 0], v_h, 2, 1.5)
+        #f.RelativeXYW([0, 0, 90], v_h, 5, 1.5)
         #f.CalibrateFRONT(wall_len - m_point - disLO)
-        f.CalibrateFRONT(wall_len // 2 - disLO)
-        f.RelativeXYW([abs(x - m_point) + 5, 0, 0, 0], v_h, 2, 1.5)
-        f.RelativeXYW([0, 0, -90], v_h, 5, 1.5)
-        f.RelativeXYW([90, 0, 0], v_f, 5, 1.5)
+        #f.CalibrateFRONT(wall_len // 2 - disLO)
+        #f.RelativeXYW([abs(x - m_point) + 5, 0, 0, 0], v_h, 2, 1.5)
+        #f.RelativeXYW([0, 0, -90], v_h, 5, 1.5)
+        f.RelativeXYW([85, 0, 0], v_f, 2, 1.5)
 
     return m_point
     
@@ -221,39 +226,35 @@ if __name__ == "__main__":
     f.RelativeXYW([0, 0, -90], v_h, 5, 1.5)
     f.CalibrateFRONT(20)
 
+    f.WAITPUSHStartLED()
+    time.sleep(0.5)
+
     f.RelativeXYW([0, 0, -90], v_h, 5, 1.5)
     write_Wall(0, 160, 3)
-    f.RelativeXYW([0, 0, -90], v_h, 5, 1.5)
-    #f.CalibrateFRONT(wall_len // 2 - disLO)
-    f.RelativeXYW([60, 0, 0], v_h, 2, 1.5)
-    f.RelativeXYW([0, 0, 90], v_h, 5, 1.5)
-    write_Wall(0, 100, 7)
+    f.RelativeXYW([0, -60, 0], v_h, 2, 1.5)
+    write_Wall(0, 100, 3)
     L, R = check_hole(0)
     x = go_through_hole(L, R, 100)
-    
     
     for i in range(3):
         if x != 100: write_Wall(i + 1, x, 3)
 
-        if x == 100:
-            pass
-        elif x > 100:
-            f.RelativeXYW([0, 0, -90], v_h, 5, 1.5)
-            f.RelativeXYW([x - 100 + 5, 0, 0], v_h, 2, 1.5)
-            f.RelativeXYW([0, 0, 90], v_h, 5, 1.5)
-        else:
-            f.RelativeXYW([0, 0, 90], v_h, 5, 1.5)
-            f.RelativeXYW([100 - x + 5, 0, 0], v_h, 2, 1.5)
-            f.RelativeXYW([0, 0, -90], v_h, 5, 1.5)
+        if x == 100: pass
+        elif x > 100: f.RelativeXYW([0, -abs(x - 100 + 5), 0], v_h, 2, 1.5)
+        else: f.RelativeXYW([0, abs(100 - x + 5), 0], v_h, 2, 1.5)
 
-        write_Wall(i + 1, 100, 7)
+        write_Wall(i + 1, 100, 3)
         L, R = check_hole(i + 1)
         x = go_through_hole(L, R, 100)
     
         print(M)
         print(Wall)
 
-    
-    write_Wall(0, 100, 10)
-    print(check_hole(0))
+    f.RelativeXYW([0, 0, -90], v_h, 2, 1.5)
+    f.CalibrateFRONT(20)
+
+    f.OFFStartLED()
+
+    #write_Wall(0, 100, 10)
+    #print(check_hole(0))
     

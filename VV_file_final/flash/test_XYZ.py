@@ -23,7 +23,6 @@ deta_a = 12.5
 X_range = (10, 190)
 Y_range = (30, 70)
 disLO = 20
-disRO = 30
 wall_len = 200
 Wall = [[-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
@@ -31,7 +30,7 @@ Wall = [[-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]]
 
 def reset_arm(TF):
-    f.MoveARM(TF, 5, 20, 50, 0, 0, 2, 0, 7)
+    f.MoveARM(TF, 8, 20, 50, 0, 0, 5, 0, 7)
 
 def find_max_length_list(target, arr):
     MAX = 0
@@ -203,7 +202,7 @@ def check_hole(n):
     return (l, r)
 
 def go_through_hole(L, R, x):
-    m_point = (L * 10 + (R + 1) * 10 ) / 2
+    m_point = ( L * 10 + (R + 1) * 10 ) / 2
     M.append(m_point)
     print(m_point)
     
@@ -251,47 +250,4 @@ def get_model_object_realxyz(correct_pre, CAMXYZ, gamma, sita):
     return R
 
 if __name__ == "__main__":
-    reset_arm(True)
-    f.RelativeXYW([0, 0, -180], v_h, 5, 1.5)
-    f.CalibrateFRONT(20)
-    f.RelativeXYW([0, 0, -90], v_h, 5, 1.5)
-    f.CalibrateFRONT(20)
-
-    f.RelativeXYW([0, 0, -90], v_h, 5, 1.5)
-    write_Wall(0, 160, 3)
-    f.RelativeXYW([0, 0, -90], v_h, 5, 1.5)
-
-    #check first wall eggs
-    f.MoveARM(False, 5, 20, 60, -188, 0, 12, 50, 9)
-    R = get_model_object_realxyz(0.8, CAMXYZ50, 0, 50)
-    print(R)
-    
-    x = 160
-    if len(R) != 0:
-        R.sort(key = lambda x: x[2][1])
-        for i in R:
-            y = 160 - i[2][1]
-            f.MoveARM(False, 5, 20, 60, -188, 0, 12, 0, 9)
-            f.CalibrateFRONT(x - disLO)
-            f.RelativeXYW([x - y - disRO, 0, 0], v_h, 5, 1.5)
-            E = get_model_object_realxyz(0.8, CAMXYZ00, 0, 0)
-
-            f.MoveARMXYZAC(False, (5, 20), (E[0][2][0], E[0][2][1] + 3, E[0][2][2]), 90, 15)
-            f.MoveARMXYZAC(False, (5, 20), (E[0][2][0], E[0][2][1] + 3, E[0][2][2]), 90, 2)
-            time.sleep(0.5)
-            f.MoveARM(False, 5, 20, 60, -188, 0, 2, 0, 7)
-            reset_arm(False)
-            x = y + disRO
-
-        f.RelativeXYW([0, 0, -180], v_h, 2, 1.5)
-        f.CalibrateFRONT(wall_len - (x + disLO))
-        f.RelativeXYW([100 - x, 0, 0], v_h, 2, 1.5)
-        f.RelativeXYW([0, 0, -90], v_h, 5, 1.5)
-    else:
-        f.RelativeXYW([60, 0, 0], v_h, 2, 1.5)
-        f.RelativeXYW([0, 0, 90], v_h, 5, 1.5)
-
-    #middle scan
-    write_Wall(0, 100, 7)
-    L, R = check_hole(0)
-    x = go_through_hole(L, R, 100)
+    f.OFFStartLED()

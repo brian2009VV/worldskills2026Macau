@@ -9,4 +9,4 @@ fun = Func(shareLib)
 f = self_function()
 
 if __name__ == "__main__":
-    f.MoveARM(True, 5, 10, 40, -90, 0, 15, 45, 9)
+    f.MoveARM(True, 8, 20, 60, 0, 0, 15, 40, 9)
